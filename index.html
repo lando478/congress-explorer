@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Congress.gov API Explorer</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap"
+            rel="stylesheet">
+      <style>
+            :root {
+                  --navy: #0d1b2a;
+                  --navy-mid: #152336;
+                  --navy-light: #1e3250;
+                  --gold: #c9a84c;
+                  --gold-light: #e8c96a;
+                  --gold-dim: rgba(201, 168, 76, 0.15);
+                  --red: #c0392b;
+                  --green: #27ae60;
+                  --white: #f5f0e8;
+                  --muted: rgba(245, 240, 232, 0.45);
+                  --border: rgba(201, 168, 76, 0.2);
+                  --radius: 6px;
+            }
+
+            * {
+                  box-sizing: border-box;
+                  margin: 0;
+                  padding: 0;
+            }
+
+            body {
+                  background: var(--navy);
+                  color: var(--white);
+                  font-family: 'DM Sans', sans-serif;
+                  font-size: 14px;
+                  min-height: 100vh;
+                  background-image:
+                        radial-gradient(ellipse at 10% 0%, rgba(201, 168, 76, 0.06) 0%, transparent 60%),
+                        radial-gradient(ellipse at 90% 100%, rgba(13, 27, 42, 0.8) 0%, transparent 60%);
+            }
+
+            /* ---- HEADER ---- */
+            header {
+                  border-bottom: 1px solid var(--border);
+                  padding: 22px 40px;
+                  display: flex;
+                  align-items: center;
+                  gap: 16px;
+                  background: rgba(13, 27, 42, 0.8);
+                  backdrop-filter: blur(8px);
+                  position: sticky;
+                  top: 0;
+                  z-index: 100;
+            }
+
+            .header-seal {
+                  width: 42px;
+                  height: 42px;
+                  border: 2px solid var(--gold);
+                  border-radius: 50%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: 18px;
+                  color: var(--gold);
+                  flex-shrink: 0;
+            }
+
+            .header-text h1 {
+                  font-family: 'Playfair Display', serif;
+                  font-size: 18px;
+                  font-weight: 600;
+                  letter-spacing: 0.02em;
+                  color: var(--white);
+            }
+
+            .header-text p {
+                  font-size: 11px;
+                  color: var(--muted);
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  margin-top: 1px;
+            }
+
+            .rate-badge {
+                  margin-left: auto;
+                  display: flex;
+                  align-items: center;
+                  gap: 20px;
+            }
+
+            .rate-info {
+                  text-align: right;
+            }
+
+            .rate-info .rate-label {
+                  font-size: 10px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.1em;
+                  color: var(--muted);
+                  font-family: 'DM Mono', monospace;
+            }
+
+            .rate-info .rate-value {
+                  font-family: 'DM Mono', monospace;
+                  font-size: 13px;
+                  color: var(--gold);
+                  font-weight: 500;
+            }
+
+            #rate-counter {
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  background: var(--gold-dim);
+                  border: 1px solid var(--border);
+                  border-radius: 20px;
+                  padding: 5px 12px;
+                  font-family: 'DM Mono', monospace;
+                  font-size: 12px;
+                  color: var(--gold);
+            }
+
+            #rate-counter .dot {
+                  width: 6px;
+                  height: 6px;
+                  background: var(--green);
+                  border-radius: 50%;
+                  animation: pulse 2s ease-in-out infinite;
+            }
+
+            @keyframes pulse {
+
+                  0%,
+                  100% {
+                        opacity: 1;
+                        transform: scale(1);
+                  }
+
+                  50% {
+                        opacity: 0.5;
+                        transform: scale(0.8);
+                  }
+            }
+
+            /* ---- LAYOUT ---- */
+            .app {
+                  display: grid;
+                  grid-template-columns: 280px 1fr;
+                  min-height: calc(100vh - 73px);
+            }
+
+            /* ---- SIDEBAR ---- */
+            .sidebar {
+                  border-right: 1px solid var(--border);
+                  padding: 28px 0;
+                  overflow-y: auto;
+                  position: sticky;
+                  top: 73px;
+                  height: calc(100vh - 73px);
+            }
+
+            .sidebar-section {
+                  margin-bottom: 8px;
+            }
+
+            .sidebar-heading {
+                  font-size: 9px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.15em;
+                  color: var(--muted);
+                  font-family: 'DM Mono', monospace;
+                  padding: 8px 24px 4px;
+            }
+
+            .sidebar-item {
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                  padding: 8px 24px;
+                  cursor: pointer;
+                  transition: all 0.15s;
+                  border-left: 2px solid transparent;
+                  font-size: 13px;
+                  color: rgba(245, 240, 232, 0.7);
+            }
+
+            .sidebar-item:hover {
+                  background: var(--gold-dim);
+                  color: var(--white);
+                  border-left-color: rgba(201, 168, 76, 0.4);
+            }
+
+            .sidebar-item.active {
+                  background: var(--gold-dim);
+                  color: var(--gold-light);
+                  border-left-color: var(--gold);
+                  font-weight: 500;
+            }
+
+            .sidebar-item .icon {
+                  font-size: 14px;
+                  width: 18px;
+                  text-align: center;
+                  flex-shrink: 0;
+            }
+
+            /* ---- MAIN PANEL ---- */
+            .main {
+                  padding: 32px 40px;
+                  max-width: 900px;
+            }
+
+            /* API KEY SECTION */
+            .api-key-bar {
+                  display: flex;
+                  gap: 10px;
+                  align-items: flex-end;
+                  margin-bottom: 32px;
+                  background: var(--navy-mid);
+                  border: 1px solid var(--border);
+                  border-radius: var(--radius);
+                  padding: 16px 20px;
+                  position: relative;
+                  overflow: hidden;
+            }
+
+            .api-key-bar::before {
+                  content: '';
+                  position: absolute;
+                  left: 0;
+                  top: 0;
+                  bottom: 0;
+                  width: 3px;
+                  background: var(--gold);
+            }
+
+            .api-key-bar .field-group {
+                  flex: 1;
+            }
+
+            .api-key-bar label {
+                  display: block;
+                  font-size: 10px;
+                  letter-spacing: 0.1em;
+                  text-transform: uppercase;
+                  color: var(--muted);
+                  font-family: 'DM Mono', monospace;
+                  margin-bottom: 6px;
+            }
+
+            .api-key-bar input {
+                  width: 100%;
+                  background: rgba(255, 255, 255, 0.04);
+                  border: 1px solid rgba(201, 168, 76, 0.25);
+                  border-radius: 4px;
+                  padding: 8px 12px;
+                  color: var(--white);
+                  font-family: 'DM Mono', monospace;
+                  font-size: 13px;
+                  outline: none;
+                  transition: border 0.2s;
+            }
+
+            .api-key-bar input:focus {
+                  border-color: var(--gold);
+            }
+
+            .api-key-bar input::placeholder {
+                  color: rgba(245, 240, 232, 0.2);
+            }
+
+            .key-status {
+                  font-size: 11px;
+                  color: var(--muted);
+                  white-space: nowrap;
+                  padding-bottom: 9px;
+            }
+
+            .key-status.valid {
+                  color: var(--green);
+            }
+
+            .key-status.invalid {
+                  color: var(--red);
+            }
+
+            /* ENDPOINT PANEL */
+            .endpoint-header {
+                  margin-bottom: 24px;
+            }
+
+            .endpoint-header h2 {
+                  font-family: 'Playfair Display', serif;
+                  font-size: 24px;
+                  font-weight: 600;
+                  color: var(--white);
+            }
+
+            .endpoint-header p {
+                  color: var(--muted);
+                  font-size: 13px;
+                  margin-top: 5px;
+                  line-height: 1.6;
+            }
+
+            .endpoint-url-preview {
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  background: rgba(0, 0, 0, 0.25);
+                  border: 1px solid var(--border);
+                  border-radius: 4px;
+                  padding: 8px 12px;
+                  margin-top: 12px;
+                  font-family: 'DM Mono', monospace;
+                  font-size: 11px;
+                  color: var(--gold);
+                  overflow-x: auto;
+                  white-space: nowrap;
+            }
+
+            .endpoint-url-preview .method {
+                  background: var(--gold-dim);
+                  border: 1px solid var(--border);
+                  border-radius: 3px;
+                  padding: 2px 6px;
+                  font-size: 10px;
+                  flex-shrink: 0;
+                  color: var(--gold-light);
+            }
+
+            /* FORM */
+            .form-grid {
+                  display: grid;
+                  grid-template-columns: 1fr 1fr;
+                  gap: 16px;
+                  margin-bottom: 24px;
+            }
+
+            .form-grid.single {
+                  grid-template-columns: 1fr;
+            }
+
+            .form-group {
+                  display: flex;
+                  flex-direction: column;
+                  gap: 6px;
+            }
+
+            .form-group.span2 {
+                  grid-column: span 2;
+            }
+
+            .form-label {
+                  font-size: 11px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.08em;
+                  color: rgba(245, 240, 232, 0.65);
+                  font-family: 'DM Mono', monospace;
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+            }
+
+            .required-badge {
+                  font-size: 9px;
+                  background: rgba(192, 57, 43, 0.2);
+                  color: #e07060;
+                  border: 1px solid rgba(192, 57, 43, 0.3);
+                  border-radius: 3px;
+                  padding: 1px 5px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.05em;
+            }
+
+            .optional-badge {
+                  font-size: 9px;
+                  background: rgba(201, 168, 76, 0.1);
+                  color: var(--muted);
+                  border: 1px solid rgba(201, 168, 76, 0.15);
+                  border-radius: 3px;
+                  padding: 1px 5px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.05em;
+            }
+
+            .form-hint {
+                  font-size: 11px;
+                  color: rgba(245, 240, 232, 0.35);
+                  line-height: 1.4;
+                  margin-top: -2px;
+            }
+
+            input[type="text"],
+            input[type="number"],
+            select,
+            textarea {
+                  background: rgba(255, 255, 255, 0.04);
+                  border: 1px solid rgba(201, 168, 76, 0.2);
+                  border-radius: 4px;
+                  padding: 9px 12px;
+                  color: var(--white);
+                  font-family: 'DM Sans', sans-serif;
+                  font-size: 13px;
+                  outline: none;
+                  transition: border 0.2s, background 0.2s;
+                  width: 100%;
+            }
+
+            input:focus,
+            select:focus,
+            textarea:focus {
+                  border-color: var(--gold);
+                  background: rgba(201, 168, 76, 0.05);
+            }
+
+            input::placeholder {
+                  color: rgba(245, 240, 232, 0.2);
+            }
+
+            select option {
+                  background: var(--navy-mid);
+                  color: var(--white);
+            }
+
+            select {
+                  cursor: pointer;
+            }
+
+            /* PAGINATION CONTROLS */
+            .pagination-row {
+                  display: grid;
+                  grid-template-columns: 1fr 1fr 1fr;
+                  gap: 12px;
+                  margin-bottom: 20px;
+                  padding: 16px;
+                  background: rgba(0, 0, 0, 0.15);
+                  border: 1px solid rgba(201, 168, 76, 0.12);
+                  border-radius: var(--radius);
+            }
+
+            .pagination-row .row-label {
+                  grid-column: span 3;
+                  font-size: 10px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.12em;
+                  color: var(--muted);
+                  font-family: 'DM Mono', monospace;
+                  margin-bottom: -4px;
+            }
+
+            /* FETCH BUTTON */
+            .fetch-bar {
+                  display: flex;
+                  gap: 12px;
+                  align-items: center;
+                  margin-bottom: 28px;
+            }
+
+            .btn-fetch {
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  background: var(--gold);
+                  color: var(--navy);
+                  border: none;
+                  border-radius: var(--radius);
+                  padding: 11px 24px;
+                  font-family: 'DM Sans', sans-serif;
+                  font-size: 13px;
+                  font-weight: 600;
+                  cursor: pointer;
+                  letter-spacing: 0.03em;
+                  transition: all 0.2s;
+                  position: relative;
+                  overflow: hidden;
+            }
+
+            .btn-fetch:hover {
+                  background: var(--gold-light);
+                  transform: translateY(-1px);
+            }
+
+            .btn-fetch:active {
+                  transform: translateY(0);
+            }
+
+            .btn-fetch:disabled {
+                  opacity: 0.5;
+                  cursor: not-allowed;
+                  transform: none;
+            }
+
+            .btn-fetch-all {
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  background: transparent;
+                  color: var(--gold);
+                  border: 1px solid var(--border);
+                  border-radius: var(--radius);
+                  padding: 11px 20px;
+                  font-family: 'DM Sans', sans-serif;
+                  font-size: 13px;
+                  font-weight: 500;
+                  cursor: pointer;
+                  transition: all 0.2s;
+            }
+
+            .btn-fetch-all:hover {
+                  background: var(--gold-dim);
+                  border-color: var(--gold);
+            }
+
+            .btn-fetch-all:disabled {
+                  opacity: 0.4;
+                  cursor: not-allowed;
+            }
+
+            /* LOADING STATE */
+            .loading-panel {
+                  display: none;
+                  background: var(--navy-mid);
+                  border: 1px solid var(--border);
+                  border-radius: var(--radius);
+                  padding: 24px;
+                  margin-bottom: 20px;
+            }
+
+            .loading-panel.visible {
+                  display: block;
+            }
+
+            .loading-header {
+                  display: flex;
+                  align-items: center;
+                  gap: 12px;
+                  margin-bottom: 14px;
+            }
+
+            .spinner {
+                  width: 18px;
+                  height: 18px;
+                  border: 2px solid rgba(201, 168, 76, 0.2);
+                  border-top-color: var(--gold);
+                  border-radius: 50%;
+                  animation: spin 0.8s linear infinite;
+                  flex-shrink: 0;
+            }
+
+            @keyframes spin {
+                  to {
+                        transform: rotate(360deg);
+                  }
+            }
+
+            .loading-title {
+                  font-size: 13px;
+                  font-weight: 500;
+                  color: var(--gold-light);
+            }
+
+            .loading-sub {
+                  font-size: 12px;
+                  color: var(--muted);
+                  margin-top: 3px;
+            }
+
+            .progress-bar-wrap {
+                  background: rgba(255, 255, 255, 0.06);
+                  border-radius: 3px;
+                  height: 4px;
+                  overflow: hidden;
+                  margin-bottom: 10px;
+            }
+
+            .progress-bar {
+                  height: 100%;
+                  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+                  border-radius: 3px;
+                  transition: width 0.3s ease;
+                  width: 0%;
+            }
+
+            .loading-log {
+                  font-family: 'DM Mono', monospace;
+                  font-size: 11px;
+                  color: rgba(245, 240, 232, 0.5);
+                  max-height: 80px;
+                  overflow-y: auto;
+                  line-height: 1.8;
+            }
+
+            .loading-log .log-line {
+                  margin-bottom: 1px;
+            }
+
+            .loading-log .log-line.ok {
+                  color: var(--green);
+            }
+
+            .loading-log .log-line.err {
+                  color: var(--red);
+            }
+
+            /* RESULTS */
+            .results-panel {
+                  display: none;
+            }
+
+            .results-panel.visible {
+                  display: block;
+            }
+
+            .results-header {
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  margin-bottom: 14px;
+            }
+
+            .results-meta {
+                  display: flex;
+                  align-items: center;
+                  gap: 14px;
+            }
+
+            .results-count {
+                  font-family: 'Playfair Display', serif;
+                  font-size: 22px;
+                  font-weight: 600;
+                  color: var(--gold-light);
+            }
+
+            .results-count-label {
+                  font-size: 12px;
+                  color: var(--muted);
+                  margin-top: 2px;
+            }
+
+            .results-actions {
+                  display: flex;
+                  gap: 8px;
+            }
+
+            .btn-csv {
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  background: var(--green);
+                  color: white;
+                  border: none;
+                  border-radius: var(--radius);
+                  padding: 8px 16px;
+                  font-family: 'DM Sans', sans-serif;
+                  font-size: 12px;
+                  font-weight: 600;
+                  cursor: pointer;
+                  transition: all 0.2s;
+                  letter-spacing: 0.02em;
+            }
+
+            .btn-csv:hover {
+                  filter: brightness(1.1);
+                  transform: translateY(-1px);
+            }
+
+            .btn-clear {
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  background: transparent;
+                  color: var(--muted);
+                  border: 1px solid rgba(255, 255, 255, 0.1);
+                  border-radius: var(--radius);
+                  padding: 8px 14px;
+                  font-family: 'DM Sans', sans-serif;
+                  font-size: 12px;
+                  cursor: pointer;
+                  transition: all 0.2s;
+            }
+
+            .btn-clear:hover {
+                  color: var(--white);
+                  border-color: rgba(255, 255, 255, 0.25);
+            }
+
+            /* TABLE */
+            .table-wrap {
+                  overflow-x: auto;
+                  border: 1px solid var(--border);
+                  border-radius: var(--radius);
+                  background: var(--navy-mid);
+                  max-height: 420px;
+                  overflow-y: auto;
+            }
+
+            table {
+                  width: 100%;
+                  border-collapse: collapse;
+                  font-size: 12px;
+            }
+
+            thead {
+                  position: sticky;
+                  top: 0;
+                  z-index: 10;
+                  background: var(--navy-light);
+            }
+
+            th {
+                  padding: 10px 14px;
+                  text-align: left;
+                  font-family: 'DM Mono', monospace;
+                  font-size: 10px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.1em;
+                  color: var(--gold);
+                  white-space: nowrap;
+                  border-bottom: 1px solid var(--border);
+                  font-weight: 500;
+            }
+
+            td {
+                  padding: 9px 14px;
+                  border-bottom: 1px solid rgba(201, 168, 76, 0.06);
+                  color: rgba(245, 240, 232, 0.8);
+                  font-size: 12px;
+                  max-width: 260px;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+            }
+
+            tr:last-child td {
+                  border-bottom: none;
+            }
+
+            tr:hover td {
+                  background: rgba(201, 168, 76, 0.04);
+                  color: var(--white);
+            }
+
+            /* ERROR */
+            .error-panel {
+                  display: none;
+                  background: rgba(192, 57, 43, 0.1);
+                  border: 1px solid rgba(192, 57, 43, 0.3);
+                  border-radius: var(--radius);
+                  padding: 16px 20px;
+                  margin-bottom: 20px;
+            }
+
+            .error-panel.visible {
+                  display: flex;
+                  gap: 12px;
+                  align-items: flex-start;
+            }
+
+            .error-icon {
+                  font-size: 18px;
+                  flex-shrink: 0;
+                  margin-top: 1px;
+            }
+
+            .error-title {
+                  font-size: 13px;
+                  font-weight: 600;
+                  color: #e07060;
+                  margin-bottom: 4px;
+            }
+
+            .error-msg {
+                  font-size: 12px;
+                  color: rgba(224, 112, 96, 0.8);
+                  font-family: 'DM Mono', monospace;
+            }
+
+            /* DIVIDER */
+            .divider {
+                  border: none;
+                  border-top: 1px solid var(--border);
+                  margin: 24px 0;
+            }
+
+            /* TOOLTIP */
+            .info-tip {
+                  display: inline-block;
+                  width: 14px;
+                  height: 14px;
+                  background: rgba(201, 168, 76, 0.15);
+                  border: 1px solid var(--border);
+                  border-radius: 50%;
+                  font-size: 9px;
+                  color: var(--gold);
+                  text-align: center;
+                  line-height: 12px;
+                  cursor: default;
+                  position: relative;
+            }
+
+            .info-tip:hover::after {
+                  content: attr(data-tip);
+                  position: absolute;
+                  left: 18px;
+                  top: -4px;
+                  background: var(--navy-light);
+                  border: 1px solid var(--border);
+                  border-radius: 4px;
+                  padding: 6px 10px;
+                  font-size: 11px;
+                  color: var(--white);
+                  white-space: nowrap;
+                  z-index: 200;
+                  pointer-events: none;
+                  font-family: 'DM Sans', sans-serif;
+                  font-style: normal;
+                  text-transform: none;
+                  letter-spacing: 0;
+                  line-height: 1.4;
+                  max-width: 240px;
+                  white-space: normal;
+                  width: 200px;
+            }
+
+            /* Scrollbar */
+            ::-webkit-scrollbar {
+                  width: 5px;
+                  height: 5px;
+            }
+
+            ::-webkit-scrollbar-track {
+                  background: transparent;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                  background: rgba(201, 168, 76, 0.25);
+                  border-radius: 3px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+                  background: rgba(201, 168, 76, 0.5);
+            }
+
+            /* Empty state */
+            .empty-state {
+                  text-align: center;
+                  padding: 60px 20px;
+                  color: var(--muted);
+            }
+
+            .empty-state .empty-icon {
+                  font-size: 36px;
+                  margin-bottom: 12px;
+                  opacity: 0.4;
+            }
+
+            .empty-state p {
+                  font-size: 13px;
+                  line-height: 1.6;
+            }
+
+            @media (max-width: 768px) {
+                  .app {
+                        grid-template-columns: 1fr;
+                  }
+
+                  .sidebar {
+                        position: static;
+                        height: auto;
+                        border-right: none;
+                        border-bottom: 1px solid var(--border);
+                        padding: 12px 0;
+                        display: flex;
+                        overflow-x: auto;
+                  }
+
+                  .sidebar-section {
+                        display: flex;
+                        flex-wrap: nowrap;
+                  }
+
+                  .sidebar-heading {
+                        display: none;
+                  }
+
+                  .sidebar-item {
+                        white-space: nowrap;
+                        border-left: none;
+                        border-bottom: 2px solid transparent;
+                        padding: 8px 14px;
+                  }
+
+                  .sidebar-item.active {
+                        border-bottom-color: var(--gold);
+                        border-left-color: transparent;
+                  }
+
+                  .main {
+                        padding: 20px;
+                  }
+
+                  .form-grid {
+                        grid-template-columns: 1fr;
+                  }
+
+                  .form-group.span2 {
+                        grid-column: span 1;
+                  }
+
+                  header {
+                        padding: 16px 20px;
+                  }
+
+                  .rate-badge {
+                        display: none;
+                  }
+
+                  .pagination-row {
+                        grid-template-columns: 1fr 1fr;
+                  }
+
+                  .pagination-row .row-label {
+                        grid-column: span 2;
+                  }
+            }
+      </style>
+</head>
+
+<body>
+
+      <header>
+            <div class="header-seal">⚖</div>
+            <div class="header-text">
+                  <h1>Congress.gov API Explorer</h1>
+                  <p>Library of Congress · v3 · BYO API Key</p>
+            </div>
+            <div class="rate-badge">
+                  <div class="rate-info">
+                        <div class="rate-label">Rate Limit</div>
+                        <div class="rate-value">5,000 / hour</div>
+                  </div>
+                  <div id="rate-counter">
+                        <span class="dot"></span>
+                        <span id="rate-used">0</span> used this session
+                  </div>
+            </div>
+      </header>
+
+      <div class="app">
+
+            <!-- SIDEBAR -->
+            <nav class="sidebar">
+                  <div class="sidebar-section">
+                        <div class="sidebar-heading">Legislation</div>
+                        <div class="sidebar-item active" onclick="showEndpoint('bill-list')">
+                              <span class="icon">📋</span> Bill List
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('bill-detail')">
+                              <span class="icon">📄</span> Bill Detail
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('bill-cosponsors')">
+                              <span class="icon">🤝</span> Bill Cosponsors
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('bill-actions')">
+                              <span class="icon">⚡</span> Bill Actions
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('bill-committees')">
+                              <span class="icon">🏛</span> Bill Committees
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('bill-amendments')">
+                              <span class="icon">✏️</span> Bill Amendments
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('bill-subjects')">
+                              <span class="icon">🏷</span> Bill Subjects
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('bill-text')">
+                              <span class="icon">📑</span> Bill Text Versions
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('bill-titles')">
+                              <span class="icon">🔤</span> Bill Titles
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('bill-relatedbills')">
+                              <span class="icon">🔗</span> Related Bills
+                        </div>
+                  </div>
+                  <div class="sidebar-section">
+                        <div class="sidebar-heading">Members</div>
+                        <div class="sidebar-item" onclick="showEndpoint('member-list')">
+                              <span class="icon">👥</span> Member List
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('member-detail')">
+                              <span class="icon">👤</span> Member Detail
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('member-sponsored')">
+                              <span class="icon">📌</span> Sponsored Legislation
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('member-cosponsored')">
+                              <span class="icon">📎</span> Cosponsored Legislation
+                        </div>
+                  </div>
+                  <div class="sidebar-section">
+                        <div class="sidebar-heading">Amendments</div>
+                        <div class="sidebar-item" onclick="showEndpoint('amendment-list')">
+                              <span class="icon">📝</span> Amendment List
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('amendment-actions')">
+                              <span class="icon">⚡</span> Amendment Actions
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('amendment-cosponsors')">
+                              <span class="icon">🤝</span> Amendment Cosponsors
+                        </div>
+                  </div>
+                  <div class="sidebar-section">
+                        <div class="sidebar-heading">Committees</div>
+                        <div class="sidebar-item" onclick="showEndpoint('committee-list')">
+                              <span class="icon">🏛</span> Committee List
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('committee-bills')">
+                              <span class="icon">📋</span> Committee Bills
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('committee-meetings')">
+                              <span class="icon">📅</span> Committee Meetings
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('committee-reports')">
+                              <span class="icon">📊</span> Committee Reports
+                        </div>
+                  </div>
+                  <div class="sidebar-section">
+                        <div class="sidebar-heading">Floor & Votes</div>
+                        <div class="sidebar-item" onclick="showEndpoint('congressional-record')">
+                              <span class="icon">📰</span> Congressional Record
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('house-vote')">
+                              <span class="icon">🗳</span> House Roll Call Votes
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('daily-record')">
+                              <span class="icon">📆</span> Daily Congressional Record
+                        </div>
+                  </div>
+                  <div class="sidebar-section">
+                        <div class="sidebar-heading">Other</div>
+                        <div class="sidebar-item" onclick="showEndpoint('nomination-list')">
+                              <span class="icon">🎖</span> Nominations
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('treaty-list')">
+                              <span class="icon">🕊</span> Treaties
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('hearing-list')">
+                              <span class="icon">🎙</span> Hearings
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('summaries-list')">
+                              <span class="icon">📋</span> Bill Summaries
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('congress-list')">
+                              <span class="icon">🏷</span> Congress List
+                        </div>
+                        <div class="sidebar-item" onclick="showEndpoint('law-list')">
+                              <span class="icon">⚖</span> Laws
+                        </div>
+                  </div>
+            </nav>
+
+            <!-- MAIN -->
+            <main class="main">
+
+                  <!-- API KEY -->
+                  <div class="api-key-bar">
+                        <div class="field-group">
+                              <label>Your API Key <span class="info-tip"
+                                          data-tip="Get a free key at api.congress.gov/sign-up/ — your key is never sent to any server, only used directly in your browser to call the Congress.gov API.">i</span></label>
+                              <input type="text" id="apiKey" placeholder="Enter your congress.gov API key…"
+                                    oninput="validateKey()">
+                        </div>
+                        <div class="key-status" id="keyStatus">No key entered</div>
+                  </div>
+
+                  <!-- DYNAMIC ENDPOINT FORM -->
+                  <div id="endpointPanel"></div>
+
+                  <!-- LOADING -->
+                  <div class="loading-panel" id="loadingPanel">
+                        <div class="loading-header">
+                              <div class="spinner"></div>
+                              <div>
+                                    <div class="loading-title" id="loadingTitle">Fetching data from Congress.gov…</div>
+                                    <div class="loading-sub" id="loadingSub">Making API request</div>
+                              </div>
+                        </div>
+                        <div class="progress-bar-wrap">
+                              <div class="progress-bar" id="progressBar"></div>
+                        </div>
+                        <div class="loading-log" id="loadingLog"></div>
+                  </div>
+
+                  <!-- ERROR -->
+                  <div class="error-panel" id="errorPanel">
+                        <div class="error-icon">⚠️</div>
+                        <div>
+                              <div class="error-title" id="errorTitle">Request failed</div>
+                              <div class="error-msg" id="errorMsg"></div>
+                        </div>
+                  </div>
+
+                  <!-- RESULTS -->
+                  <div class="results-panel" id="resultsPanel">
+                        <div class="results-header">
+                              <div class="results-meta">
+                                    <div>
+                                          <div class="results-count" id="resultsCount">—</div>
+                                          <div class="results-count-label">records returned</div>
+                                    </div>
+                              </div>
+                              <div class="results-actions">
+                                    <button class="btn-csv" onclick="downloadCSV()">⬇ Download CSV</button>
+                                    <button class="btn-clear" onclick="clearResults()">✕ Clear</button>
+                              </div>
+                        </div>
+                        <div class="table-wrap">
+                              <table id="resultsTable">
+                                    <thead id="resultsHead"></thead>
+                                    <tbody id="resultsBody"></tbody>
+                              </table>
+                        </div>
+                  </div>
+
+                  <!-- EMPTY -->
+                  <div class="empty-state" id="emptyState">
+                        <div class="empty-icon">🏛</div>
+                        <p>Select an endpoint from the sidebar,<br>enter your API key, fill in the parameters,<br>and
+                              fetch data.</p>
+                  </div>
+
+            </main>
+      </div>
+
+      <script>
+            // =========================================================
+            // ENDPOINT DEFINITIONS
+            // =========================================================
+            const ENDPOINTS = {
+
+                  'bill-list': {
+                        title: 'Bill List',
+                        desc: 'Returns a list of bills sorted by date of latest action. Filter by congress and/or bill type.',
+                        url: (p) => `https://api.congress.gov/v3/bill${p.congress ? '/' + p.congress : ''}${p.billType ? '/' + p.billType.toLowerCase() : ''}`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', hint: 'e.g. 118, 117, 116', required: false, placeholder: 'Leave blank for all' },
+                              { id: 'billType', label: 'Bill Type', type: 'select', options: ['', 'hr', 's', 'hjres', 'sjres', 'hconres', 'sconres', 'hres', 'sres'], labels: ['All Types', 'H.R. (House Bill)', 'S. (Senate Bill)', 'H.J.Res.', 'S.J.Res.', 'H.Con.Res.', 'S.Con.Res.', 'H.Res.', 'S.Res.'], required: false },
+                              { id: 'fromDateTime', label: 'Updated From Date', hint: 'Format: YYYY-MM-DDTHH:MM:SSZ', required: false, placeholder: '2023-01-01T00:00:00Z' },
+                              { id: 'toDateTime', label: 'Updated To Date', hint: 'Format: YYYY-MM-DDTHH:MM:SSZ', required: false, placeholder: '2024-01-01T00:00:00Z' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.bills || data.bill || [])
+                  },
+
+                  'bill-detail': {
+                        title: 'Bill Detail',
+                        desc: 'Returns detailed information for a specific bill including sponsor, status, committees, and more.',
+                        url: (p) => `https://api.congress.gov/v3/bill/${p.congress}/${p.billType.toLowerCase()}/${p.billNumber}`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', hint: 'e.g. 118', required: true, placeholder: '118' },
+                              { id: 'billType', label: 'Bill Type', type: 'select', options: ['hr', 's', 'hjres', 'sjres', 'hconres', 'sconres', 'hres', 'sres'], labels: ['H.R.', 'S.', 'H.J.Res.', 'S.J.Res.', 'H.Con.Res.', 'S.Con.Res.', 'H.Res.', 'S.Res.'], required: true },
+                              { id: 'billNumber', label: 'Bill Number', hint: 'Numeric only, e.g. 1234', required: true, placeholder: '1234' },
+                        ],
+                        paginate: false,
+                        flatten: (data) => data.bill ? [flattenObject(data.bill)] : []
+                  },
+
+                  'bill-cosponsors': {
+                        title: 'Bill Cosponsors',
+                        desc: 'Returns all cosponsors for a specific bill, including their bioguide ID, name, party, and state.',
+                        url: (p) => `https://api.congress.gov/v3/bill/${p.congress}/${p.billType.toLowerCase()}/${p.billNumber}/cosponsors`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', hint: 'e.g. 118', required: true, placeholder: '118' },
+                              { id: 'billType', label: 'Bill Type', type: 'select', options: ['hr', 's', 'hjres', 'sjres', 'hconres', 'sconres', 'hres', 'sres'], labels: ['H.R.', 'S.', 'H.J.Res.', 'S.J.Res.', 'H.Con.Res.', 'S.Con.Res.', 'H.Res.', 'S.Res.'], required: true },
+                              { id: 'billNumber', label: 'Bill Number', hint: 'Numeric only, e.g. 1234', required: true, placeholder: '1234' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.cosponsors || [])
+                  },
+
+                  'bill-actions': {
+                        title: 'Bill Actions',
+                        desc: 'Returns all legislative actions taken on a specific bill, in chronological order.',
+                        url: (p) => `https://api.congress.gov/v3/bill/${p.congress}/${p.billType.toLowerCase()}/${p.billNumber}/actions`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: true, placeholder: '118' },
+                              { id: 'billType', label: 'Bill Type', type: 'select', options: ['hr', 's', 'hjres', 'sjres', 'hconres', 'sconres', 'hres', 'sres'], labels: ['H.R.', 'S.', 'H.J.Res.', 'S.J.Res.', 'H.Con.Res.', 'S.Con.Res.', 'H.Res.', 'S.Res.'], required: true },
+                              { id: 'billNumber', label: 'Bill Number', required: true, placeholder: '1234' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.actions || [])
+                  },
+
+                  'bill-committees': {
+                        title: 'Bill Committees',
+                        desc: 'Returns committees and subcommittees associated with a specific bill.',
+                        url: (p) => `https://api.congress.gov/v3/bill/${p.congress}/${p.billType.toLowerCase()}/${p.billNumber}/committees`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: true, placeholder: '118' },
+                              { id: 'billType', label: 'Bill Type', type: 'select', options: ['hr', 's', 'hjres', 'sjres', 'hconres', 'sconres', 'hres', 'sres'], labels: ['H.R.', 'S.', 'H.J.Res.', 'S.J.Res.', 'H.Con.Res.', 'S.Con.Res.', 'H.Res.', 'S.Res.'], required: true },
+                              { id: 'billNumber', label: 'Bill Number', required: true, placeholder: '1234' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.committees || [])
+                  },
+
+                  'bill-amendments': {
+                        title: 'Bill Amendments',
+                        desc: 'Returns amendments associated with a specific bill.',
+                        url: (p) => `https://api.congress.gov/v3/bill/${p.congress}/${p.billType.toLowerCase()}/${p.billNumber}/amendments`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: true, placeholder: '118' },
+                              { id: 'billType', label: 'Bill Type', type: 'select', options: ['hr', 's', 'hjres', 'sjres', 'hconres', 'sconres', 'hres', 'sres'], labels: ['H.R.', 'S.', 'H.J.Res.', 'S.J.Res.', 'H.Con.Res.', 'S.Con.Res.', 'H.Res.', 'S.Res.'], required: true },
+                              { id: 'billNumber', label: 'Bill Number', required: true, placeholder: '1234' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.amendments || [])
+                  },
+
+                  'bill-subjects': {
+                        title: 'Bill Subjects / Policy Area',
+                        desc: 'Returns legislative subjects and policy area associated with a specific bill.',
+                        url: (p) => `https://api.congress.gov/v3/bill/${p.congress}/${p.billType.toLowerCase()}/${p.billNumber}/subjects`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: true, placeholder: '118' },
+                              { id: 'billType', label: 'Bill Type', type: 'select', options: ['hr', 's', 'hjres', 'sjres', 'hconres', 'sconres', 'hres', 'sres'], labels: ['H.R.', 'S.', 'H.J.Res.', 'S.J.Res.', 'H.Con.Res.', 'S.Con.Res.', 'H.Res.', 'S.Res.'], required: true },
+                              { id: 'billNumber', label: 'Bill Number', required: true, placeholder: '1234' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.subjects?.legislativeSubjects || data.legislativeSubjects || [])
+                  },
+
+                  'bill-text': {
+                        title: 'Bill Text Versions',
+                        desc: 'Returns available text versions of a bill with links to the full text.',
+                        url: (p) => `https://api.congress.gov/v3/bill/${p.congress}/${p.billType.toLowerCase()}/${p.billNumber}/text`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: true, placeholder: '118' },
+                              { id: 'billType', label: 'Bill Type', type: 'select', options: ['hr', 's', 'hjres', 'sjres', 'hconres', 'sconres', 'hres', 'sres'], labels: ['H.R.', 'S.', 'H.J.Res.', 'S.J.Res.', 'H.Con.Res.', 'S.Con.Res.', 'H.Res.', 'S.Res.'], required: true },
+                              { id: 'billNumber', label: 'Bill Number', required: true, placeholder: '1234' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.textVersions || [])
+                  },
+
+                  'bill-titles': {
+                        title: 'Bill Titles',
+                        desc: 'Returns all title entries for a specific bill.',
+                        url: (p) => `https://api.congress.gov/v3/bill/${p.congress}/${p.billType.toLowerCase()}/${p.billNumber}/titles`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: true, placeholder: '118' },
+                              { id: 'billType', label: 'Bill Type', type: 'select', options: ['hr', 's', 'hjres', 'sjres', 'hconres', 'sconres', 'hres', 'sres'], labels: ['H.R.', 'S.', 'H.J.Res.', 'S.J.Res.', 'H.Con.Res.', 'S.Con.Res.', 'H.Res.', 'S.Res.'], required: true },
+                              { id: 'billNumber', label: 'Bill Number', required: true, placeholder: '1234' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.titles || [])
+                  },
+
+                  'bill-relatedbills': {
+                        title: 'Related Bills',
+                        desc: 'Returns bills identified as related to a specific bill.',
+                        url: (p) => `https://api.congress.gov/v3/bill/${p.congress}/${p.billType.toLowerCase()}/${p.billNumber}/relatedbills`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: true, placeholder: '118' },
+                              { id: 'billType', label: 'Bill Type', type: 'select', options: ['hr', 's', 'hjres', 'sjres', 'hconres', 'sconres', 'hres', 'sres'], labels: ['H.R.', 'S.', 'H.J.Res.', 'S.J.Res.', 'H.Con.Res.', 'S.Con.Res.', 'H.Res.', 'S.Res.'], required: true },
+                              { id: 'billNumber', label: 'Bill Number', required: true, placeholder: '1234' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.relatedBills || [])
+                  },
+
+                  'member-list': {
+                        title: 'Member List',
+                        desc: 'Returns a list of congressional members. Filter by congress, state, district, or current status.',
+                        url: (p) => {
+                              if (p.congress && p.state && p.district) return `https://api.congress.gov/v3/member/congress/${p.congress}/${p.state}/${p.district}`;
+                              if (p.congress && p.state) return `https://api.congress.gov/v3/member/congress/${p.congress}/${p.state}`;
+                              if (p.congress) return `https://api.congress.gov/v3/member/congress/${p.congress}`;
+                              return `https://api.congress.gov/v3/member`;
+                        },
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', hint: 'e.g. 118 — leave blank for all', required: false, placeholder: '118' },
+                              { id: 'state', label: 'State Code', hint: '2-letter abbreviation, e.g. CA, TX, NY', required: false, placeholder: 'CA' },
+                              { id: 'district', label: 'District Number', hint: 'For House members. Requires congress + state.', required: false, placeholder: '5' },
+                              { id: 'currentMember', label: 'Current Members Only', type: 'select', options: ['', 'true', 'false'], labels: ['All', 'Current only', 'Former only'], required: false },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.members || data.member || [])
+                  },
+
+                  'member-detail': {
+                        title: 'Member Detail',
+                        desc: 'Returns full profile for a member including party, terms, leadership, and sponsored legislation count.',
+                        url: (p) => `https://api.congress.gov/v3/member/${p.bioguideId}`,
+                        fields: [
+                              { id: 'bioguideId', label: 'Bioguide ID', hint: 'Unique member identifier, e.g. P000197 (Nancy Pelosi)', required: true, placeholder: 'P000197' },
+                        ],
+                        paginate: false,
+                        flatten: (data) => data.member ? [flattenObject(data.member)] : []
+                  },
+
+                  'member-sponsored': {
+                        title: 'Sponsored Legislation',
+                        desc: 'Returns all bills sponsored by a specific member.',
+                        url: (p) => `https://api.congress.gov/v3/member/${p.bioguideId}/sponsored-legislation`,
+                        fields: [
+                              { id: 'bioguideId', label: 'Bioguide ID', hint: 'e.g. P000197 (Nancy Pelosi)', required: true, placeholder: 'P000197' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.sponsoredLegislation || [])
+                  },
+
+                  'member-cosponsored': {
+                        title: 'Cosponsored Legislation',
+                        desc: 'Returns all bills cosponsored by a specific member.',
+                        url: (p) => `https://api.congress.gov/v3/member/${p.bioguideId}/cosponsored-legislation`,
+                        fields: [
+                              { id: 'bioguideId', label: 'Bioguide ID', hint: 'e.g. P000197', required: true, placeholder: 'P000197' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.cosponsoredLegislation || [])
+                  },
+
+                  'amendment-list': {
+                        title: 'Amendment List',
+                        desc: 'Returns a list of amendments. Filter by congress and amendment type.',
+                        url: (p) => `https://api.congress.gov/v3/amendment${p.congress ? '/' + p.congress : ''}${p.amendmentType ? '/' + p.amendmentType.toLowerCase() : ''}`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: false, placeholder: '118' },
+                              { id: 'amendmentType', label: 'Amendment Type', type: 'select', options: ['', 'hamdt', 'samdt', 'suamdt'], labels: ['All Types', 'H.Amdt. (House)', 'S.Amdt. (Senate)', 'S.U.Amdt.'], required: false },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.amendments || [])
+                  },
+
+                  'amendment-actions': {
+                        title: 'Amendment Actions',
+                        desc: 'Returns actions taken on a specific amendment.',
+                        url: (p) => `https://api.congress.gov/v3/amendment/${p.congress}/${p.amendmentType.toLowerCase()}/${p.amendmentNumber}/actions`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: true, placeholder: '118' },
+                              { id: 'amendmentType', label: 'Amendment Type', type: 'select', options: ['hamdt', 'samdt'], labels: ['H.Amdt.', 'S.Amdt.'], required: true },
+                              { id: 'amendmentNumber', label: 'Amendment Number', required: true, placeholder: '1234' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.actions || [])
+                  },
+
+                  'amendment-cosponsors': {
+                        title: 'Amendment Cosponsors',
+                        desc: 'Returns cosponsors of a specific amendment.',
+                        url: (p) => `https://api.congress.gov/v3/amendment/${p.congress}/${p.amendmentType.toLowerCase()}/${p.amendmentNumber}/cosponsors`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: true, placeholder: '118' },
+                              { id: 'amendmentType', label: 'Amendment Type', type: 'select', options: ['hamdt', 'samdt'], labels: ['H.Amdt.', 'S.Amdt.'], required: true },
+                              { id: 'amendmentNumber', label: 'Amendment Number', required: true, placeholder: '1234' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.cosponsors || [])
+                  },
+
+                  'committee-list': {
+                        title: 'Committee List',
+                        desc: 'Returns a list of House and Senate committees. Filter by chamber and/or congress.',
+                        url: (p) => `https://api.congress.gov/v3/committee${p.chamber ? '/' + p.chamber.toLowerCase() : ''}${p.chamber && p.congress ? '/' + p.congress : ''}`,
+                        fields: [
+                              { id: 'chamber', label: 'Chamber', type: 'select', options: ['', 'house', 'senate', 'joint'], labels: ['All Chambers', 'House', 'Senate', 'Joint'], required: false },
+                              { id: 'congress', label: 'Congress Number', hint: 'Optional filter', required: false, placeholder: '118' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.committees || [])
+                  },
+
+                  'committee-bills': {
+                        title: 'Committee Bills',
+                        desc: 'Returns bills referred to a specific committee.',
+                        url: (p) => `https://api.congress.gov/v3/committee/${p.chamber.toLowerCase()}/${p.committeeCode}/bills`,
+                        fields: [
+                              { id: 'chamber', label: 'Chamber', type: 'select', options: ['house', 'senate', 'joint'], labels: ['House', 'Senate', 'Joint'], required: true },
+                              { id: 'committeeCode', label: 'Committee Code', hint: 'e.g. hsif00 (House Energy & Commerce)', required: true, placeholder: 'hsif00' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.bills || data.committeeBills || [])
+                  },
+
+                  'committee-meetings': {
+                        title: 'Committee Meetings',
+                        desc: 'Returns committee meetings. Filter by congress and chamber.',
+                        url: (p) => `https://api.congress.gov/v3/committee-meeting${p.congress ? '/' + p.congress : ''}${p.congress && p.chamber ? '/' + p.chamber.toLowerCase() : ''}`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: false, placeholder: '118' },
+                              { id: 'chamber', label: 'Chamber', type: 'select', options: ['', 'house', 'senate'], labels: ['All', 'House', 'Senate'], required: false },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.committeeMeetings || [])
+                  },
+
+                  'committee-reports': {
+                        title: 'Committee Reports',
+                        desc: 'Returns committee reports, optionally filtered by congress and report type.',
+                        url: (p) => `https://api.congress.gov/v3/committee-report${p.congress ? '/' + p.congress : ''}${p.congress && p.reportType ? '/' + p.reportType.toLowerCase() : ''}`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: false, placeholder: '118' },
+                              { id: 'reportType', label: 'Report Type', type: 'select', options: ['', 'hrpt', 'srpt', 'erpt'], labels: ['All Types', 'H.Rpt.', 'S.Rpt.', 'Ex.Rpt.'], required: false },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.reports || [])
+                  },
+
+                  'congressional-record': {
+                        title: 'Congressional Record',
+                        desc: 'Returns Congressional Record issues, searchable by year and month.',
+                        url: (p) => `https://api.congress.gov/v3/congressional-record${p.year ? '?y=' + p.year : ''}${p.year && p.month ? '&m=' + p.month : ''}`,
+                        fields: [
+                              { id: 'year', label: 'Year', hint: 'e.g. 2023', required: false, placeholder: '2023' },
+                              { id: 'month', label: 'Month', hint: 'Numeric, 1–12', required: false, placeholder: '6' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.Results?.Issues || data.issues || [])
+                  },
+
+                  'house-vote': {
+                        title: 'House Roll Call Votes',
+                        desc: 'Returns House roll call votes for a specified congress and session.',
+                        url: (p) => `https://api.congress.gov/v3/house-vote/${p.congress}/${p.session}`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: true, placeholder: '118' },
+                              { id: 'session', label: 'Session Number', hint: '1 or 2', type: 'select', options: ['1', '2'], labels: ['Session 1', 'Session 2'], required: true },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.houseRollCallVotes || data.votes || [])
+                  },
+
+                  'daily-record': {
+                        title: 'Daily Congressional Record',
+                        desc: 'Returns daily Congressional Record listings.',
+                        url: (p) => `https://api.congress.gov/v3/daily-congressional-record${p.volumeNumber ? '/' + p.volumeNumber : ''}${p.volumeNumber && p.issueNumber ? '/' + p.issueNumber : ''}${p.volumeNumber && p.issueNumber ? '/articles' : ''}`,
+                        fields: [
+                              { id: 'volumeNumber', label: 'Volume Number', hint: 'e.g. 169 for 2023', required: false, placeholder: '169' },
+                              { id: 'issueNumber', label: 'Issue Number', hint: 'Optional, requires volume number', required: false, placeholder: '1' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.dailyCongressionalRecord || data.articles || [])
+                  },
+
+                  'nomination-list': {
+                        title: 'Nominations',
+                        desc: 'Returns presidential nominations submitted to the Senate.',
+                        url: (p) => `https://api.congress.gov/v3/nomination${p.congress ? '/' + p.congress : ''}`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: false, placeholder: '118' },
+                              { id: 'fromDateTime', label: 'Updated From Date', hint: 'YYYY-MM-DDTHH:MM:SSZ', required: false, placeholder: '2023-01-01T00:00:00Z' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.nominations || [])
+                  },
+
+                  'treaty-list': {
+                        title: 'Treaties',
+                        desc: 'Returns treaties submitted to the Senate, optionally filtered by congress.',
+                        url: (p) => `https://api.congress.gov/v3/treaty${p.congress ? '/' + p.congress : ''}`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: false, placeholder: '118' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.treaties || [])
+                  },
+
+                  'hearing-list': {
+                        title: 'Hearings',
+                        desc: 'Returns congressional hearing data, filterable by congress and chamber.',
+                        url: (p) => `https://api.congress.gov/v3/hearing${p.congress ? '/' + p.congress : ''}${p.congress && p.chamber ? '/' + p.chamber.toLowerCase() : ''}`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: false, placeholder: '118' },
+                              { id: 'chamber', label: 'Chamber', type: 'select', options: ['', 'house', 'senate'], labels: ['All', 'House', 'Senate'], required: false },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.hearings || [])
+                  },
+
+                  'summaries-list': {
+                        title: 'Bill Summaries',
+                        desc: 'Returns CRS-authored summaries of bills and resolutions.',
+                        url: (p) => `https://api.congress.gov/v3/summaries${p.congress ? '/' + p.congress : ''}${p.congress && p.billType ? '/' + p.billType.toLowerCase() : ''}`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: false, placeholder: '118' },
+                              { id: 'billType', label: 'Bill Type', type: 'select', options: ['', 'hr', 's', 'hjres', 'sjres', 'hconres', 'sconres', 'hres', 'sres'], labels: ['All Types', 'H.R.', 'S.', 'H.J.Res.', 'S.J.Res.', 'H.Con.Res.', 'S.Con.Res.', 'H.Res.', 'S.Res.'], required: false },
+                              { id: 'fromDateTime', label: 'Updated From Date', required: false, placeholder: '2023-01-01T00:00:00Z' },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.summaries || [])
+                  },
+
+                  'congress-list': {
+                        title: 'Congress List',
+                        desc: 'Returns a list of congressional sessions with start and end dates.',
+                        url: (p) => `https://api.congress.gov/v3/congress`,
+                        fields: [],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.congresses || [])
+                  },
+
+                  'law-list': {
+                        title: 'Laws',
+                        desc: 'Returns public or private laws for a given congress. Requires congress and law type.',
+                        url: (p) => `https://api.congress.gov/v3/law/${p.congress}${p.lawType ? '/' + p.lawType.toLowerCase() : ''}`,
+                        fields: [
+                              { id: 'congress', label: 'Congress Number', required: true, placeholder: '118' },
+                              { id: 'lawType', label: 'Law Type', type: 'select', options: ['pub', 'priv'], labels: ['Public Law', 'Private Law'], required: true },
+                        ],
+                        paginate: true,
+                        flatten: (data) => flattenArray(data.laws || [])
+                  },
+
+            };
+
+            // =========================================================
+            // STATE
+            // =========================================================
+            let currentEndpoint = 'bill-list';
+            let resultsData = [];
+            let resultsCols = [];
+            let rateUsed = 0;
+
+            // =========================================================
+            // HELPERS
+            // =========================================================
+            function flattenObject(obj, prefix = '') {
+                  const out = {};
+                  for (const [k, v] of Object.entries(obj || {})) {
+                        const key = prefix ? `${prefix}_${k}` : k;
+                        if (v === null || v === undefined) { out[key] = ''; }
+                        else if (typeof v === 'object' && !Array.isArray(v)) {
+                              Object.assign(out, flattenObject(v, key));
+                        } else if (Array.isArray(v)) {
+                              out[key] = v.map(i => typeof i === 'object' ? JSON.stringify(i) : i).join(' | ');
+                        } else {
+                              out[key] = v;
+                        }
+                  }
+                  return out;
+            }
+
+            function flattenArray(arr) {
+                  return arr.map(item => typeof item === 'object' ? flattenObject(item) : { value: item });
+            }
+
+            function getParams() {
+                  const ep = ENDPOINTS[currentEndpoint];
+                  const p = {};
+                  ep.fields.forEach(f => {
+                        const el = document.getElementById('field_' + f.id);
+                        if (el) p[f.id] = el.value.trim();
+                  });
+                  p.limit = document.getElementById('param_limit')?.value || '250';
+                  p.offset = document.getElementById('param_offset')?.value || '0';
+                  return p;
+            }
+
+            function buildUrl(p, override = {}) {
+                  const ep = ENDPOINTS[currentEndpoint];
+                  const merged = { ...p, ...override };
+                  let base = ep.url(merged);
+                  const qs = new URLSearchParams();
+                  qs.set('format', 'json');
+                  if (merged.limit) qs.set('limit', merged.limit);
+                  if (merged.offset) qs.set('offset', merged.offset);
+                  if (merged.fromDateTime) qs.set('fromDateTime', merged.fromDateTime);
+                  if (merged.toDateTime) qs.set('toDateTime', merged.toDateTime);
+                  if (merged.currentMember) qs.set('currentMember', merged.currentMember);
+                  if (merged.fromDate) qs.set('fromDateTime', merged.fromDate);
+                  const key = document.getElementById('apiKey').value.trim();
+                  qs.set('api_key', key);
+                  return `${base}?${qs.toString()}`;
+            }
+
+            function updateUrlPreview() {
+                  try {
+                        const p = getParams();
+                        const url = buildUrl(p);
+                        const display = url.replace(/api_key=[^&]+/, 'api_key=••••••••');
+                        document.getElementById('urlPreview').textContent = display;
+                  } catch (e) { }
+            }
+
+            function validateKey() {
+                  const key = document.getElementById('apiKey').value.trim();
+                  const el = document.getElementById('keyStatus');
+                  if (!key) { el.textContent = 'No key entered'; el.className = 'key-status'; }
+                  else if (key.length < 10) { el.textContent = '✗ Key too short'; el.className = 'key-status invalid'; }
+                  else { el.textContent = '✓ Key saved'; el.className = 'key-status valid'; }
+                  updateUrlPreview();
+            }
+
+            function log(msg, cls = '') {
+                  const el = document.getElementById('loadingLog');
+                  const line = document.createElement('div');
+                  line.className = 'log-line ' + cls;
+                  line.textContent = msg;
+                  el.appendChild(line);
+                  el.scrollTop = el.scrollHeight;
+            }
+
+            function setProgress(pct) {
+                  document.getElementById('progressBar').style.width = pct + '%';
+            }
+
+            // =========================================================
+            // RENDER ENDPOINT
+            // =========================================================
+            function showEndpoint(id) {
+                  currentEndpoint = id;
+                  clearResults();
+                  hideError();
+
+                  // Update sidebar
+                  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+                  document.querySelectorAll('.sidebar-item').forEach(el => {
+                        if (el.getAttribute('onclick') === `showEndpoint('${id}')`) el.classList.add('active');
+                  });
+
+                  const ep = ENDPOINTS[id];
+                  const html = `
+    <div class="endpoint-header">
+      <h2>${ep.title}</h2>
+      <p>${ep.desc}</p>
+      <div class="endpoint-url-preview">
+        <span class="method">GET</span>
+        <span id="urlPreview">…</span>
+      </div>
+    </div>
+
+    <div class="form-grid ${ep.fields.length <= 2 ? 'single' : ''}">
+      ${ep.fields.map(f => `
+        <div class="form-group${ep.fields.length <= 2 ? '' : ''}">
+          <label class="form-label">
+            ${f.label}
+            <span class="${f.required ? 'required-badge' : 'optional-badge'}">${f.required ? 'Required' : 'Optional'}</span>
+            ${f.hint ? `<span class="info-tip" data-tip="${f.hint}">i</span>` : ''}
+          </label>
+          ${f.type === 'select'
+                              ? `<select id="field_${f.id}" onchange="updateUrlPreview()">
+                ${f.options.map((o, i) => `<option value="${o}">${f.labels ? f.labels[i] : o}</option>`).join('')}
+               </select>`
+                              : `<input type="text" id="field_${f.id}" placeholder="${f.placeholder || ''}" oninput="updateUrlPreview()">`
+                        }
+          ${f.hint ? `<div class="form-hint">${f.hint}</div>` : ''}
+        </div>
+      `).join('')}
+    </div>
+
+    ${ep.paginate ? `
+    <div class="pagination-row">
+      <div class="row-label">Pagination <span class="info-tip" data-tip="Max 250 per request. Use 'Fetch All Pages' to retrieve all records automatically.">i</span></div>
+      <div class="form-group">
+        <label class="form-label">Limit <span class="optional-badge">Optional</span></label>
+        <input type="number" id="param_limit" value="250" min="1" max="250" oninput="updateUrlPreview()">
+        <div class="form-hint">Records per request (max 250)</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Offset <span class="optional-badge">Optional</span></label>
+        <input type="number" id="param_offset" value="0" min="0" oninput="updateUrlPreview()">
+        <div class="form-hint">Starting record (0-indexed)</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Format</label>
+        <input type="text" value="JSON" disabled style="opacity:0.4;cursor:not-allowed">
+        <div class="form-hint">Always returns JSON</div>
+      </div>
+    </div>` : ''}
+
+    <div class="fetch-bar">
+      <button class="btn-fetch" onclick="fetchData()">
+        ▶ Fetch Data
+      </button>
+      ${ep.paginate ? `<button class="btn-fetch-all" id="btnFetchAll" onclick="fetchAllPages()">
+        ⟳ Fetch All Pages
+      </button>` : ''}
+      <span style="font-size:11px;color:var(--muted);margin-left:4px;">Rate limit: 5,000 req/hr · <a href="https://api.congress.gov/sign-up/" target="_blank" style="color:var(--gold);text-decoration:none;">Get API key</a></span>
+    </div>
+  `;
+
+                  document.getElementById('endpointPanel').innerHTML = html;
+                  document.getElementById('emptyState').style.display = 'none';
+                  updateUrlPreview();
+            }
+
+            // =========================================================
+            // FETCH
+            // =========================================================
+            async function fetchData() {
+                  if (!validateBeforeFetch()) return;
+                  const p = getParams();
+                  const url = buildUrl(p);
+
+                  showLoading('Fetching from Congress.gov…', 'Sending request…');
+                  log(`GET ${url.replace(/api_key=[^&]+/, 'api_key=...')}`);
+                  setProgress(20);
+
+                  try {
+                        const resp = await fetch(url);
+                        rateUsed++;
+                        document.getElementById('rate-used').textContent = rateUsed;
+                        setProgress(70);
+
+                        if (!resp.ok) {
+                              const err = await resp.text();
+                              throw new Error(`HTTP ${resp.status}: ${err.slice(0, 200)}`);
+                        }
+
+                        const json = await resp.json();
+                        log(`✓ ${resp.status} OK`, 'ok');
+                        setProgress(90);
+
+                        const ep = ENDPOINTS[currentEndpoint];
+                        const rows = ep.flatten(json);
+
+                        if (rows.length === 0) {
+                              log('No records found', 'err');
+                              showError('No results', 'The API returned no records for these parameters. Try adjusting your filters.');
+                              hideLoading();
+                              return;
+                        }
+
+                        log(`✓ ${rows.length} records parsed`, 'ok');
+                        setProgress(100);
+                        setTimeout(() => {
+                              hideLoading();
+                              renderResults(rows);
+                        }, 300);
+
+                  } catch (e) {
+                        log('✗ ' + e.message, 'err');
+                        hideLoading();
+                        showError('Request failed', e.message);
+                  }
+            }
+
+            async function fetchAllPages() {
+                  if (!validateBeforeFetch()) return;
+
+                  const btnFetchAll = document.getElementById('btnFetchAll');
+                  if (btnFetchAll) btnFetchAll.disabled = true;
+                  document.querySelector('.btn-fetch').disabled = true;
+
+                  showLoading('Fetching all pages…', 'Page 1 of ?');
+                  const p = getParams();
+                  let allRows = [];
+                  let offset = 0;
+                  let total = null;
+                  let page = 1;
+
+                  try {
+                        while (true) {
+                              const url = buildUrl(p, { limit: 250, offset });
+                              log(`Page ${page}: GET offset=${offset}`);
+                              const resp = await fetch(url);
+                              rateUsed++;
+                              document.getElementById('rate-used').textContent = rateUsed;
+
+                              if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                              const json = await resp.json();
+
+                              if (total === null) {
+                                    total = json.pagination?.count || json.pagination?.total || 250;
+                              }
+
+                              const ep = ENDPOINTS[currentEndpoint];
+                              const rows = ep.flatten(json);
+                              if (rows.length === 0) break;
+
+                              allRows = allRows.concat(rows);
+                              log(`✓ Page ${page}: +${rows.length} records (${allRows.length}/${total})`, 'ok');
+
+                              const pct = Math.min(95, Math.round((allRows.length / total) * 95));
+                              setProgress(pct);
+                              document.getElementById('loadingTitle').textContent = `Fetching all pages… (${allRows.length} / ${total})`;
+                              document.getElementById('loadingSub').textContent = `Page ${page} · ${rateUsed} requests used`;
+
+                              if (rows.length < 250 || allRows.length >= total) break;
+                              offset += 250;
+                              page++;
+
+                              // Rate limit protection: small delay
+                              if (page % 10 === 0) await new Promise(r => setTimeout(r, 200));
+                        }
+
+                        setProgress(100);
+                        log(`✓ Complete: ${allRows.length} total records`, 'ok');
+                        setTimeout(() => {
+                              hideLoading();
+                              renderResults(allRows);
+                        }, 300);
+
+                  } catch (e) {
+                        log('✗ ' + e.message, 'err');
+                        hideLoading();
+                        showError('Fetch failed', e.message);
+                  }
+
+                  if (btnFetchAll) btnFetchAll.disabled = false;
+                  document.querySelector('.btn-fetch').disabled = false;
+            }
+
+            function validateBeforeFetch() {
+                  const key = document.getElementById('apiKey').value.trim();
+                  if (!key) {
+                        showError('No API key', 'Please enter your Congress.gov API key at the top of the page.');
+                        return false;
+                  }
+                  const ep = ENDPOINTS[currentEndpoint];
+                  for (const f of ep.fields) {
+                        if (f.required) {
+                              const el = document.getElementById('field_' + f.id);
+                              if (!el || !el.value.trim()) {
+                                    showError('Missing required field', `"${f.label}" is required for this endpoint.`);
+                                    el?.focus();
+                                    return false;
+                              }
+                        }
+                  }
+                  return true;
+            }
+
+            // =========================================================
+            // RESULTS
+            // =========================================================
+            function renderResults(rows) {
+                  resultsData = rows;
+
+                  // Build column list from all rows
+                  const cols = [];
+                  const seen = new Set();
+                  rows.forEach(row => Object.keys(row).forEach(k => { if (!seen.has(k)) { seen.add(k); cols.push(k); } }));
+                  resultsCols = cols;
+
+                  // Header
+                  const thead = document.getElementById('resultsHead');
+                  const tbody = document.getElementById('resultsBody');
+                  thead.innerHTML = `<tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr>`;
+
+                  // Rows (cap preview at 500 for perf)
+                  const preview = rows.slice(0, 500);
+                  tbody.innerHTML = preview.map(row =>
+                        `<tr>${cols.map(c => `<td title="${String(row[c] || '').replace(/"/g, '&quot;')}">${row[c] ?? ''}</td>`).join('')}</tr>`
+                  ).join('');
+
+                  document.getElementById('resultsCount').textContent = rows.length.toLocaleString();
+                  document.getElementById('resultsPanel').classList.add('visible');
+                  document.getElementById('emptyState').style.display = 'none';
+                  if (rows.length > 500) {
+                        const note = document.createElement('div');
+                        note.style.cssText = 'padding:10px 14px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);';
+                        note.textContent = `Preview shows first 500 of ${rows.length.toLocaleString()} rows. Download CSV for full dataset.`;
+                        document.querySelector('.table-wrap').appendChild(note);
+                  }
+            }
+
+            function clearResults() {
+                  resultsData = [];
+                  resultsCols = [];
+                  document.getElementById('resultsPanel').classList.remove('visible');
+                  document.getElementById('resultsHead').innerHTML = '';
+                  document.getElementById('resultsBody').innerHTML = '';
+                  document.getElementById('emptyState').style.display = 'block';
+            }
+
+            // =========================================================
+            // CSV
+            // =========================================================
+            function downloadCSV() {
+                  if (!resultsData.length) return;
+
+                  const escape = v => {
+                        const s = String(v ?? '');
+                        if (s.includes(',') || s.includes('"') || s.includes('\n')) return `"${s.replace(/"/g, '""')}"`;
+                        return s;
+                  };
+
+                  const lines = [
+                        resultsCols.map(escape).join(','),
+                        ...resultsData.map(row => resultsCols.map(c => escape(row[c] ?? '')).join(','))
+                  ];
+
+                  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  const ep = ENDPOINTS[currentEndpoint];
+                  a.href = url;
+                  a.download = `congress_${currentEndpoint}_${new Date().toISOString().slice(0, 10)}.csv`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+            }
+
+            // =========================================================
+            // UI HELPERS
+            // =========================================================
+            function showLoading(title, sub) {
+                  document.getElementById('loadingPanel').classList.add('visible');
+                  document.getElementById('loadingTitle').textContent = title;
+                  document.getElementById('loadingSub').textContent = sub;
+                  document.getElementById('loadingLog').innerHTML = '';
+                  document.getElementById('progressBar').style.width = '0%';
+                  document.getElementById('resultsPanel').classList.remove('visible');
+                  document.getElementById('emptyState').style.display = 'none';
+                  hideError();
+            }
+            function hideLoading() {
+                  document.getElementById('loadingPanel').classList.remove('visible');
+            }
+            function showError(title, msg) {
+                  document.getElementById('errorPanel').classList.add('visible');
+                  document.getElementById('errorTitle').textContent = title;
+                  document.getElementById('errorMsg').textContent = msg;
+            }
+            function hideError() {
+                  document.getElementById('errorPanel').classList.remove('visible');
+            }
+
+            // =========================================================
+            // INIT
+            // =========================================================
+            showEndpoint('bill-list');
+      </script>
+</body>
+
+</html>
